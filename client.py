@@ -2,6 +2,7 @@ import pygame as pg
 import random
 import os
 import time
+import copy
 
 pg.init()
 
@@ -11,11 +12,12 @@ WIDTH = 500
 HEIGHT = 700
 DICE_NUM = 5
 DICE_LEN = 50
-SCORE_BOARD = {
-    "aces": 0, "twos": 0, "threes": 0, "fours": 0, "fives": 0, "sixs": 0, "bonus": 0,
-    "four_of_a_kind": 0, "full_house": 0, "small_straight": 0, "large_straight": 0,
-    "chance": 0, "yahtzee": 0
-}
+SCORE_BOARD = [-1] * 13
+CATEGORIES = [
+    "aces", "twos", "threes", "fours", "fives", "sixs", "bonus",
+    "four_of_a_kind", "full_house", "small_straight", "large_straight",
+    "chance", "yahtzee"
+]
 
 white = (255, 255, 255)
 black = (0, 0, 0)
@@ -44,13 +46,13 @@ clock = pg.time.Clock()
 class Player(object):
     def __init__(self, name):
         self.name = name
-        self.score_board = SCORE_BOARD
         self.dices = [Dice(n) for n in range(1, 6)]
         self.storage = [0, 0, 0, 0, 0]
 
     def roll_remain_dices(self):
-        for d in self.dices:
-            d.roll()
+        for i, dice in enumerate(self.dices):
+            dice.roll()
+            self.storage[i] = dice.num
 
     def draw_all_dices(self):
         for d in self.dices:
@@ -88,27 +90,46 @@ class Dice(object):
         pg.display.update()
 
 
+class ScoreBoard(object):
+    def __init__(self, name, num_list):
+        self.name = name
+        self.visible_board = SCORE_BOARD
+        self.score_board = SCORE_BOARD
+        self.num_list = num_list
+
+    def record_score(self, categories, score):
+        self.score_board[categories] += score
+        self.visible_board = copy.deepcopy(self.score_board)
+
+    def cal_categories(self):
+        # modifiable_score_list = list(filter(lambda x: x[1] == -1, self.score_board))
+        print(self.visible_board)
+
+
 def draw_window(win):
     win.fill(black)
+    pg.display.update()
 
 
 def main():
     running = True
+    draw_window(win)
     p1 = Player("Sumin")
-
+    t = ScoreBoard("Sumin", [1, 2, 3, 4, 5])
+    t.cal_categories()
+    t1 = ScoreBoard("Sumin", [1, 1, 2, 2, 3])
+    t1.cal_categories()
     while running:
         clock.tick(60)
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 running = False
                 pg.quit()
+
         p1.draw_all_dices()
         p1.roll_remain_dices()
         time.sleep(2)
         p1.draw_all_dices()
-
-    draw_window(win)
-    pg.display.update()
 
 
 main()
