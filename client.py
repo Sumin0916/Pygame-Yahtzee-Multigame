@@ -1,6 +1,7 @@
 import pygame as pg
 import random
 import os
+import time
 
 pg.init()
 
@@ -8,7 +9,8 @@ HOLD = 0
 WAIT = 1
 WIDTH = 500
 HEIGHT = 700
-DICE_LEN = 100
+DICE_NUM = 5
+DICE_LEN = 50
 SCORE_BOARD = {
     "aces": 0, "twos": 0, "threes": 0, "fours": 0, "fives": 0, "sixs": 0, "bonus": 0,
     "four_of_a_kind": 0, "full_house": 0, "small_straight": 0, "large_straight": 0,
@@ -43,41 +45,56 @@ class Player(object):
     def __init__(self, name):
         self.name = name
         self.score_board = SCORE_BOARD
-        self.dices = [[Dice(100, 100)] * 5]
+        self.dices = [Dice(n) for n in range(1, 6)]
         self.storage = [0, 0, 0, 0, 0]
+
+    def roll_remain_dices(self):
+        for d in self.dices:
+            d.roll()
+
+    def draw_all_dices(self):
+        for d in self.dices:
+            d.draw()
 
 
 class Dice(object):
-    def __init__(self, x, y):
-        self.num = 0
+    def __init__(self, order):
+        self.num = random.randint(1, 6)
         self.stat = WAIT
-        self.x = x
-        self.y = y
+        self.order = order
+        self.img_adjustment()
 
     def roll(self):
         if self.stat == WAIT:
             self.num = random.randint(1, 6)
+            self.img_adjustment()
 
     def turn_stat(self):
         if self.stat:
             self.stat = HOLD
+
         else:
             self.stat = WAIT
 
+    def img_adjustment(self):
+        self.img = dice_img[self.num-1]
+        self.img = pg.transform.scale(self.img, (DICE_LEN, DICE_LEN))
+        self.img_rect = self.img.get_rect()
+        self.img_rect.centerx = (WIDTH / DICE_NUM) * self.order - DICE_LEN
+        self.img_rect.centery = HEIGHT / 2
+
     def draw(self):
-        if 1 <= self.num <= 6:
-            self.img = dice_img[self.num-1]
-            win.blit(self.img, (self.x, self.y))
+        win.blit(self.img, self.img_rect)
+        pg.display.update()
 
 
-def draw_window(win, player):
+def draw_window(win):
     win.fill(black)
-    pg.display.update()
 
 
 def main():
     running = True
-    p1 = Player("sumin")
+    p1 = Player("Sumin")
 
     while running:
         clock.tick(60)
@@ -85,8 +102,13 @@ def main():
             if event.type == pg.QUIT:
                 running = False
                 pg.quit()
+        p1.draw_all_dices()
+        p1.roll_remain_dices()
+        time.sleep(2)
+        p1.draw_all_dices()
 
-    draw_window(win, p1)
+    draw_window(win)
+    pg.display.update()
 
 
 main()
